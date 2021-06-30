@@ -12,7 +12,11 @@
     >
   </base-card>
   <!-- Dynamic component => a seconda del valore di selectedTab verrà renderizzato un componente diverso (selected-resources o add-resources) -->
-  <component :is="selectedTab"></component>
+  <!-- con keep-alive faccio si che se anche cambio pagina mentre sto scrivendo nella form di addresource, 
+	i cmapi della form non si resettano => vengono messi in cache -->
+  <keep-alive>
+    <component :is="selectedTab"></component>
+  </keep-alive>
 </template>
 
 <script>
@@ -42,12 +46,32 @@ export default {
   },
   provide() {
     return {
-      resources: this.storedResources
+      resources: this.storedResources,
+      addResource: this.addResource
     };
+  },
+  computed: {
+    storedResButtonMode() {
+      return this.selectedTab === 'stored-resources' ? null : 'flat';
+    },
+    addResButtonMode() {
+      return this.selectedTab === 'add-resource' ? null : 'flat';
+    }
   },
   methods: {
     setSelectedTab(tab) {
       this.selectedTab = tab;
+    },
+    addResource(title, description, url) {
+      const resource = {
+        id: new Date().toISOString,
+        title: title,
+        description: description,
+        link: url
+      };
+
+      this.storedResources.unshift(resource);
+      this.selectedTab = 'stored-resources';
     }
   }
 };
